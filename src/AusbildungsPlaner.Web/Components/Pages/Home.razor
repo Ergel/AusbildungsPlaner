@@ -1,7 +1,56 @@
-﻿@page "/"
+@page "/"
+@attribute [Authorize]
 
-<PageTitle>Home</PageTitle>
+<PageTitle>AusbildungsPlaner</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudText Typo="Typo.h4" Class="mb-4">Willkommen beim AusbildungsPlaner</MudText>
 
-Welcome to your new app.
+<MudGrid>
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Semesterplan</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText>Verwalte Semester und plane Sessions mit Themen, Räumen und Gastdozenten.</MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Href="/semester" Variant="Variant.Text" Color="Color.Primary">Zu den Semestern</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Themenverwaltung</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText>Erstelle und verwalte Themen nach Kategorien für deine Übungssessions.</MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Href="/themen" Variant="Variant.Text" Color="Color.Primary">Zu den Themen</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+    <AuthorizeView Roles="Gastdozent">
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Meine Sessions</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText>Sieh deine zugewiesenen Sessions auf einen Blick.</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Href="/meine-sessions" Variant="Variant.Text" Color="Color.Primary">Zu meinen Sessions</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </AuthorizeView>
+</MudGrid>

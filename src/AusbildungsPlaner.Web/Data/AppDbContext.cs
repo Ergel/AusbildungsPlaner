@@ -19,5 +19,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             .WithMany()
             .HasForeignKey(s => s.GastdozentId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<Session>()
+            .HasOne(s => s.Semester)
+            .WithMany(sem => sem.Sessions)
+            .HasForeignKey(s => s.SemesterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Session>()
+            .HasOne(s => s.Thema)
+            .WithMany(t => t.Sessions)
+            .HasForeignKey(s => s.ThemaId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
