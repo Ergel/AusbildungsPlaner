@@ -1,0 +1,54 @@
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_valid">
+            <MudTextField @bind-Value="Semester.Name" Label="Name"
+                          Required="true" RequiredError="Name ist erforderlich."
+                          HelperText='z.B. "WiSe 2025/26"' Class="mb-3" />
+            <MudDatePicker @bind-Date="_startDate" Label="Startdatum"
+                           DateFormat="dd.MM.yyyy" Required="true" Class="mb-3" />
+            <MudDatePicker @bind-Date="_endDate" Label="Enddatum"
+                           DateFormat="dd.MM.yyyy" Required="true" Class="mb-3" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Abbrechen">Abbrechen</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   OnClick="Speichern" Disabled="!_valid">Speichern</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Semester Semester { get; set; } = new();
+
+    private MudForm _form = null!;
+    private bool _valid;
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+
+    protected override void OnInitialized()
+    {
+        Semester = new Semester
+        {
+            Id = Semester.Id,
+            Name = Semester.Name,
+            StartDatum = Semester.StartDatum,
+            EndDatum = Semester.EndDatum
+        };
+        _startDate = Semester.StartDatum == default ? null : Semester.StartDatum.ToDateTime(TimeOnly.MinValue);
+        _endDate = Semester.EndDatum == default ? null : Semester.EndDatum.ToDateTime(TimeOnly.MinValue);
+    }
+
+    private async Task Speichern()
+    {
+        await _form.Validate();
+        if (_valid && _startDate.HasValue && _endDate.HasValue)
+        {
+            Semester.StartDatum = DateOnly.FromDateTime(_startDate.Value);
+            Semester.EndDatum = DateOnly.FromDateTime(_endDate.Value);
+            MudDialog.Close(DialogResult.Ok(Semester));
+        }
+    }
+
+    private void Abbrechen() => MudDialog.Cancel();
+}

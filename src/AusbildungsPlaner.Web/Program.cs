@@ -17,6 +17,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<ThemaService>();
+builder.Services.AddScoped<SemesterService>();
+builder.Services.AddScoped<SessionService>();
 
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
     {

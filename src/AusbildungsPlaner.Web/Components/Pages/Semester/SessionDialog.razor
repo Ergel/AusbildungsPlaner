@@ -1,0 +1,90 @@
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_valid">
+            <MudDatePicker @bind-Date="_datum" Label="Datum" DateFormat="dd.MM.yyyy"
+                           Required="true" Class="mb-3" />
+            <MudTimePicker @bind-Time="_uhrzeit" Label="Uhrzeit" TimeFormat="HH:mm"
+                           AmPm="false" Required="true" Class="mb-3" />
+            <MudNumericField @bind-Value="Session.DauerMinuten" Label="Dauer (Minuten)"
+                             Min="30" Max="480" Step="30" Class="mb-3" />
+            <MudSelect @bind-Value="Session.Typ" Label="Typ" Class="mb-3">
+                <MudSelectItem Value="SessionTyp.Praesenz">Präsenz</MudSelectItem>
+                <MudSelectItem Value="SessionTyp.Zoom">Zoom</MudSelectItem>
+            </MudSelect>
+
+            @if (Session.Typ == SessionTyp.Praesenz)
+            {
+                <MudTextField @bind-Value="Session.Raum" Label="Raum" Class="mb-3" />
+            }
+            else
+            {
+                <MudTextField @bind-Value="Session.ZoomLink" Label="Zoom-Link"
+                              InputType="InputType.Url" Class="mb-3" />
+            }
+
+            <MudSelect @bind-Value="Session.ThemaId" Label="Thema (optional)"
+                       Clearable="true" Class="mb-3">
+                @foreach (var thema in Themen)
+                {
+                    <MudSelectItem Value="@((int?)thema.Id)">
+                        @thema.Titel (@thema.Kategorie)
+                    </MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudTextField @bind-Value="Session.Notizen" Label="Notizen"
+                          Lines="2" Class="mb-3" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Abbrechen">Abbrechen</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                   OnClick="Speichern" Disabled="!_valid">Speichern</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Session Session { get; set; } = new();
+    [Parameter] public int SemesterId { get; set; }
+    [Parameter] public List<Thema> Themen { get; set; } = [];
+
+    private MudForm _form = null!;
+    private bool _valid;
+    private DateTime? _datum;
+    private TimeSpan? _uhrzeit;
+
+    protected override void OnInitialized()
+    {
+        Session = new Session
+        {
+            Id = Session.Id,
+            SemesterId = SemesterId,
+            Datum = Session.Datum,
+            Uhrzeit = Session.Uhrzeit,
+            DauerMinuten = Session.DauerMinuten == 0 ? 120 : Session.DauerMinuten,
+            Typ = Session.Typ,
+            Raum = Session.Raum,
+            ZoomLink = Session.ZoomLink,
+            ThemaId = Session.ThemaId,
+            Notizen = Session.Notizen
+        };
+        _datum = Session.Datum == default ? null : Session.Datum.ToDateTime(TimeOnly.MinValue);
+        _uhrzeit = Session.Uhrzeit == default
+            ? new TimeSpan(8, 0, 0)
+            : new TimeSpan(Session.Uhrzeit.Hour, Session.Uhrzeit.Minute, 0);
+    }
+
+    private async Task Speichern()
+    {
+        await _form.Validate();
+        if (_valid && _datum.HasValue && _uhrzeit.HasValue)
+        {
+            Session.Datum = DateOnly.FromDateTime(_datum.Value);
+            Session.Uhrzeit = TimeOnly.FromTimeSpan(_uhrzeit.Value);
+            MudDialog.Close(DialogResult.Ok(Session));
+        }
+    }
+
+    private void Abbrechen() => MudDialog.Cancel();
+}

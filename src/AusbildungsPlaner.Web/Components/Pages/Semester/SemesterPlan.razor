@@ -1,0 +1,228 @@
+@page "/semester/{SemesterId:int}"
+@attribute [Authorize]
+@inject SemesterService SemesterService
+@inject SessionService SessionService
+@inject ThemaService ThemaService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>@(_semester?.Name ?? "Semesterplan")</PageTitle>
+
+@if (_semester is null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudBreadcrumbs Items="_breadcrumbs" Class="mb-2" />
+    <MudText Typo="Typo.h4" Class="mb-1">@_semester.Name</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+        @_semester.StartDatum.ToString("dd.MM.yyyy") – @_semester.EndDatum.ToString("dd.MM.yyyy")
+        &nbsp;|&nbsp; @_sessions.Count Sessions
+    </MudText>
+
+    <MudTabs Elevation="1" Rounded="true" Class="mb-4">
+        <MudTabPanel Text="Listenansicht" Icon="@Icons.Material.Filled.List">
+            <div class="mt-4">
+                <AuthorizeView Roles="Admin">
+                    <Authorized>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="SessionErstellen" Class="mb-4">
+                            Neue Session
+                        </MudButton>
+                    </Authorized>
+                </AuthorizeView>
+
+                <MudDataGrid T="Session" Items="_sessions" Hover="true" Striped="true"
+                             SortMode="SortMode.Single">
+                    <Columns>
+                        <PropertyColumn Property="s => s.Datum" Title="Datum"
+                                        Format="dd.MM.yyyy" />
+                        <PropertyColumn Property="s => s.Uhrzeit" Title="Uhrzeit"
+                                        Format="HH:mm" />
+                        <TemplateColumn Title="Typ">
+                            <CellTemplate>
+                                @if (context.Item.Typ == SessionTyp.Zoom)
+                                {
+                                    <MudChip T="string" Color="Color.Info" Size="Size.Small">Zoom</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Color="Color.Success" Size="Size.Small">Präsenz</MudChip>
+                                }
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="Thema">
+                            <CellTemplate>
+                                @(context.Item.Thema?.Titel ?? "–")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="Raum / Zoom">
+                            <CellTemplate>
+                                @if (context.Item.Typ == SessionTyp.Zoom && context.Item.ZoomLink is not null)
+                                {
+                                    <MudLink Href="@context.Item.ZoomLink" Target="_blank">Link</MudLink>
+                                }
+                                else
+                                {
+                                    @(context.Item.Raum ?? "–")
+                                }
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="Gastdozent">
+                            <CellTemplate>
+                                @(context.Item.Gastdozent?.VollerName ?? "–")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="Aktionen" Filterable="false" Sortable="false">
+                            <CellTemplate>
+                                <AuthorizeView Roles="Admin" Context="authCtx">
+                                    <Authorized>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       Size="Size.Small" Color="Color.Primary"
+                                                       OnClick="@(() => SessionBearbeiten(context.Item))" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Size="Size.Small" Color="Color.Error"
+                                                       OnClick="@(() => SessionLoeschen(context.Item))" />
+                                    </Authorized>
+                                </AuthorizeView>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                    <NoRecordsContent>
+                        <MudText>Noch keine Sessions geplant.</MudText>
+                    </NoRecordsContent>
+                </MudDataGrid>
+            </div>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Kalenderansicht" Icon="@Icons.Material.Filled.CalendarMonth">
+            <div class="mt-4">
+                @foreach (var gruppe in _sessions.GroupBy(s => s.Datum).OrderBy(g => g.Key))
+                {
+                    <MudPaper Class="pa-3 mb-3" Elevation="1">
+                        <MudText Typo="Typo.subtitle1">
+                            <b>@gruppe.Key.ToString("dddd, dd. MMMM yyyy")</b>
+                        </MudText>
+                        @foreach (var s in gruppe)
+                        {
+                            <MudDivider Class="my-2" />
+                            <MudGrid>
+                                <MudItem xs="2">
+                                    <MudText Typo="Typo.body2">@s.Uhrzeit.ToString("HH:mm") Uhr</MudText>
+                                    <MudChip T="string" Size="Size.Small"
+                                             Color="@(s.Typ == SessionTyp.Zoom ? Color.Info : Color.Success)">
+                                        @(s.Typ == SessionTyp.Zoom ? "Zoom" : "Präsenz")
+                                    </MudChip>
+                                </MudItem>
+                                <MudItem xs="10">
+                                    <MudText Typo="Typo.body1">
+                                        @(s.Thema?.Titel ?? "(kein Thema)")
+                                    </MudText>
+                                    @if (s.Thema?.Kategorie is not null)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                                            @s.Thema.Kategorie
+                                        </MudChip>
+                                    }
+                                    @if (s.Gastdozent is not null)
+                                    {
+                                        <MudText Typo="Typo.caption">
+                                            Gastdozent: @s.Gastdozent.VollerName
+                                        </MudText>
+                                    }
+                                    @if (!string.IsNullOrEmpty(s.Notizen))
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                            @s.Notizen
+                                        </MudText>
+                                    }
+                                </MudItem>
+                            </MudGrid>
+                        }
+                    </MudPaper>
+                }
+                @if (!_sessions.Any())
+                {
+                    <MudText Color="Color.Secondary">Noch keine Sessions geplant.</MudText>
+                }
+            </div>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@code {
+    [Parameter] public int SemesterId { get; set; }
+
+    private Semester? _semester;
+    private List<Session> _sessions = [];
+    private List<Thema> _themen = [];
+
+    private List<BreadcrumbItem> _breadcrumbs =>
+    [
+        new("Semester", href: "/semester"),
+        new(_semester?.Name ?? "...", href: null, disabled: true)
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _semester = await SemesterService.GetSemesterAsync(SemesterId);
+        if (_semester is null) { Navigation.NavigateTo("/semester"); return; }
+        await LadeSessions();
+        _themen = await ThemaService.GetAlleThemenAsync();
+    }
+
+    private async Task LadeSessions() =>
+        _sessions = await SessionService.GetSessionsAsync(SemesterId);
+
+    private async Task SessionErstellen()
+    {
+        var parameter = new DialogParameters<SessionDialog>
+        {
+            { x => x.SemesterId, SemesterId },
+            { x => x.Themen, _themen }
+        };
+        var dialog = await DialogService.ShowAsync<SessionDialog>("Neue Session", parameter);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: Session neu })
+        {
+            await SessionService.ErstellenAsync(neu);
+            await LadeSessions();
+            Snackbar.Add("Session erstellt.", Severity.Success);
+        }
+    }
+
+    private async Task SessionBearbeiten(Session session)
+    {
+        var parameter = new DialogParameters<SessionDialog>
+        {
+            { x => x.Session, session },
+            { x => x.SemesterId, SemesterId },
+            { x => x.Themen, _themen }
+        };
+        var dialog = await DialogService.ShowAsync<SessionDialog>("Session bearbeiten", parameter);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: Session aktualisiert })
+        {
+            await SessionService.AktualisierenAsync(aktualisiert);
+            await LadeSessions();
+            Snackbar.Add("Session gespeichert.", Severity.Success);
+        }
+    }
+
+    private async Task SessionLoeschen(Session session)
+    {
+        var confirm = await DialogService.ShowMessageBoxAsync(
+            "Session löschen",
+            $"Session vom {session.Datum:dd.MM.yyyy} löschen?",
+            yesText: "Löschen", cancelText: "Abbrechen");
+        if (confirm == true)
+        {
+            await SessionService.LoeschenAsync(session.Id);
+            await LadeSessions();
+            Snackbar.Add("Session gelöscht.", Severity.Info);
+        }
+    }
+}

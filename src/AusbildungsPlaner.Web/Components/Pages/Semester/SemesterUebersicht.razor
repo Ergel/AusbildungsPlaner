@@ -1,0 +1,108 @@
+@page "/semester"
+@attribute [Authorize]
+@inject SemesterService SemesterService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Semester</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Semester</MudText>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="SemesterErstellen" Class="mb-4">
+            Neues Semester
+        </MudButton>
+    </Authorized>
+</AuthorizeView>
+
+@if (_semester.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">Noch keine Semester vorhanden.</MudAlert>
+}
+else
+{
+    <MudGrid>
+        @foreach (var sem in _semester)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="2">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">@sem.Name</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                @sem.StartDatum.ToString("dd.MM.yyyy") – @sem.EndDatum.ToString("dd.MM.yyyy")
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.CalendarMonth"
+                                   OnClick="@(() => Navigation.NavigateTo($"/semester/{sem.Id}"))">
+                            Semesterplan
+                        </MudButton>
+                        <AuthorizeView Roles="Admin" Context="adminCtx">
+                            <Authorized>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                               OnClick="@(() => SemesterBearbeiten(sem))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                               Color="Color.Error"
+                                               OnClick="@(() => SemesterLoeschen(sem))" />
+                            </Authorized>
+                        </AuthorizeView>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    private List<Semester> _semester = [];
+
+    protected override async Task OnInitializedAsync() => await LadeSemester();
+
+    private async Task LadeSemester() => _semester = await SemesterService.GetAlleSemesterAsync();
+
+    private async Task SemesterErstellen()
+    {
+        var dialog = await DialogService.ShowAsync<SemesterDialog>("Neues Semester");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: Semester neu })
+        {
+            await SemesterService.ErstellenAsync(neu);
+            await LadeSemester();
+            Snackbar.Add("Semester erstellt.", Severity.Success);
+        }
+    }
+
+    private async Task SemesterBearbeiten(Semester semester)
+    {
+        var parameter = new DialogParameters<SemesterDialog> { { x => x.Semester, semester } };
+        var dialog = await DialogService.ShowAsync<SemesterDialog>("Semester bearbeiten", parameter);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: Semester aktualisiert })
+        {
+            await SemesterService.AktualisierenAsync(aktualisiert);
+            await LadeSemester();
+            Snackbar.Add("Semester gespeichert.", Severity.Success);
+        }
+    }
+
+    private async Task SemesterLoeschen(Semester semester)
+    {
+        var confirm = await DialogService.ShowMessageBoxAsync(
+            "Semester löschen",
+            $"'{semester.Name}' und alle enthaltenen Sessions löschen?",
+            yesText: "Löschen", cancelText: "Abbrechen");
+        if (confirm == true)
+        {
+            await SemesterService.LoeschenAsync(semester.Id);
+            await LadeSemester();
+            Snackbar.Add("Semester gelöscht.", Severity.Info);
+        }
+    }
+}
