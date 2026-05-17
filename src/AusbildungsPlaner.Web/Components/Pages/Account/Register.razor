@@ -1,0 +1,97 @@
+@page "/account/register"
+@using AusbildungsPlaner.Web.Data.Models
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<AppUser> UserManager
+@inject SignInManager<AppUser> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Registrieren</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5">Registrieren</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <EditForm Model="Input" OnValidSubmit="RegisterAsync" FormName="register">
+                <DataAnnotationsValidator />
+                <MudTextField @bind-Value="Input.Vorname" Label="Vorname"
+                              For="@(() => Input.Vorname)" Class="mb-3" />
+                <MudTextField @bind-Value="Input.Nachname" Label="Nachname"
+                              For="@(() => Input.Nachname)" Class="mb-3" />
+                <MudTextField @bind-Value="Input.Email" Label="E-Mail" InputType="InputType.Email"
+                              For="@(() => Input.Email)" Class="mb-3" />
+                <MudTextField @bind-Value="Input.Password" Label="Passwort" InputType="InputType.Password"
+                              For="@(() => Input.Password)" Class="mb-3" />
+                <MudTextField @bind-Value="Input.ConfirmPassword" Label="Passwort bestätigen"
+                              InputType="InputType.Password" For="@(() => Input.ConfirmPassword)" Class="mb-3" />
+                @if (errors.Count > 0)
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-3">
+                        @foreach (var e in errors)
+                        {
+                            <div>@e</div>
+                        }
+                    </MudAlert>
+                }
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled"
+                           Color="Color.Primary" FullWidth="true">Registrieren</MudButton>
+            </EditForm>
+        </MudCardContent>
+        <MudCardActions>
+            <MudLink Href="/account/login">Bereits registriert? Anmelden</MudLink>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    private List<string> errors = [];
+
+    private async Task RegisterAsync()
+    {
+        var user = new AppUser
+        {
+            UserName = Input.Email,
+            Email = Input.Email,
+            Vorname = Input.Vorname,
+            Nachname = Input.Nachname
+        };
+
+        var result = await UserManager.CreateAsync(user, Input.Password);
+        if (result.Succeeded)
+        {
+            await UserManager.AddToRoleAsync(user, "Azubi");
+            await SignInManager.SignInAsync(user, isPersistent: false);
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            errors = result.Errors.Select(e => e.Description).ToList();
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Vorname { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Nachname { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.MinLength(8)]
+        public string Password { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Compare(nameof(Password), ErrorMessage = "Passwörter stimmen nicht überein.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

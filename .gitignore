@@ -16,5 +16,10 @@ packages/
 x64/
 x86/
 
+## Datenbank
+*.db
+*.db-shm
+*.db-wal
+
 ## Logs
 *.log

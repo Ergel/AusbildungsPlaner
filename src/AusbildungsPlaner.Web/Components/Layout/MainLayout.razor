@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
 
 <MudThemeProvider />
 <MudPopoverProvider />
@@ -11,6 +12,18 @@
                        OnClick="@(() => _drawerOpen = !_drawerOpen)" />
         <MudText Typo="Typo.h6" Class="ml-3">AusbildungsPlaner</MudText>
         <MudSpacer />
+        <AuthorizeView>
+            <Authorized>
+                <MudText Class="mr-3">@context.User.Identity?.Name</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit"
+                               Href="/account/logout" title="Abmelden" />
+            </Authorized>
+            <NotAuthorized>
+                <MudButton Href="/account/login" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Login">
+                    Anmelden
+                </MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
     </MudAppBar>
 
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
