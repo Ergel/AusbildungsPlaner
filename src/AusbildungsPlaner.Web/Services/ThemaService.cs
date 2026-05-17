@@ -9,6 +9,12 @@ public class ThemaService(AppDbContext db)
     public async Task<List<Thema>> GetAlleThemenAsync()
         => await db.Themen.OrderBy(t => t.Kategorie).ThenBy(t => t.Titel).ToListAsync();
 
+    public async Task<List<Thema>> GetThemenNachKategorieAsync(string kategorie)
+        => await db.Themen
+                   .Where(t => t.Kategorie == kategorie)
+                   .OrderBy(t => t.Titel)
+                   .ToListAsync();
+
     public async Task<Thema?> GetThemaAsync(int id)
         => await db.Themen.FindAsync(id);
 
