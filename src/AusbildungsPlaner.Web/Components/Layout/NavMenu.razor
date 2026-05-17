@@ -14,6 +14,14 @@
                 </MudNavLink>
             </MudNavGroup>
 
+            <AuthorizeView Roles="Gastdozent" Context="gastCtx">
+                <Authorized>
+                    <MudNavLink Href="/meine-sessions" Icon="@Icons.Material.Filled.PersonPin">
+                        Meine Sessions
+                    </MudNavLink>
+                </Authorized>
+            </AuthorizeView>
+
             <AuthorizeView Roles="Admin" Context="adminCtx">
                 <Authorized>
                     <MudNavGroup Title="Administration" Icon="@Icons.Material.Filled.AdminPanelSettings">

@@ -1,0 +1,99 @@
+@page "/meine-sessions"
+@attribute [Authorize(Roles = "Gastdozent,Admin")]
+@inject GastdozentService GastdozentService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Meine Sessions</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Meine Sessions</MudText>
+
+@if (_sessions.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">
+        Dir sind noch keine Sessions zugewiesen.
+    </MudAlert>
+}
+else
+{
+    <MudGrid>
+        @foreach (var gruppe in _sessions.GroupBy(s => s.Semester?.Name ?? "Unbekannt"))
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.h6" Class="mb-2">@gruppe.Key</MudText>
+            </MudItem>
+            @foreach (var session in gruppe)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Elevation="2">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.subtitle1">
+                                    @session.Datum.ToString("dddd, dd. MMMM yyyy")
+                                </MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    @session.Uhrzeit.ToString("HH:mm") Uhr · @session.DauerMinuten Min.
+                                </MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudChip T="string" Size="Size.Small"
+                                         Color="@(session.Typ == SessionTyp.Zoom ? Color.Info : Color.Success)">
+                                    @(session.Typ == SessionTyp.Zoom ? "Zoom" : "Präsenz")
+                                </MudChip>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            @if (session.Thema is not null)
+                            {
+                                <MudText Typo="Typo.body1"><b>@session.Thema.Titel</b></MudText>
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Class="mt-1">
+                                    @session.Thema.Kategorie
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <MudText Color="Color.Secondary">Kein Thema zugewiesen</MudText>
+                            }
+
+                            @if (session.Typ == SessionTyp.Zoom && !string.IsNullOrEmpty(session.ZoomLink))
+                            {
+                                <div class="mt-2">
+                                    <MudLink Href="@session.ZoomLink" Target="_blank"
+                                             StartIcon="@Icons.Material.Filled.VideoCall">
+                                        Zoom-Meeting öffnen
+                                    </MudLink>
+                                </div>
+                            }
+                            else if (!string.IsNullOrEmpty(session.Raum))
+                            {
+                                <MudText Typo="Typo.body2" Class="mt-2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Room" Size="Size.Small" /> @session.Raum
+                                </MudText>
+                            }
+
+                            @if (!string.IsNullOrEmpty(session.Notizen))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                                    @session.Notizen
+                                </MudText>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        }
+    </MudGrid>
+}
+
+@code {
+    private List<Session> _sessions = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(
+            System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId is not null)
+            _sessions = await GastdozentService.GetMeineSessionsAsync(userId);
+    }
+}

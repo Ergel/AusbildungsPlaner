@@ -3,6 +3,7 @@
 @inject SemesterService SemesterService
 @inject SessionService SessionService
 @inject ThemaService ThemaService
+@inject GastdozentService GastdozentService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
@@ -159,6 +160,7 @@ else
     private Semester? _semester;
     private List<Session> _sessions = [];
     private List<Thema> _themen = [];
+    private List<AppUser> _gastdozenten = [];
 
     private List<BreadcrumbItem> _breadcrumbs =>
     [
@@ -172,6 +174,7 @@ else
         if (_semester is null) { Navigation.NavigateTo("/semester"); return; }
         await LadeSessions();
         _themen = await ThemaService.GetAlleThemenAsync();
+        _gastdozenten = await GastdozentService.GetAlleGastdozentenAsync();
     }
 
     private async Task LadeSessions() =>
@@ -182,7 +185,8 @@ else
         var parameter = new DialogParameters<SessionDialog>
         {
             { x => x.SemesterId, SemesterId },
-            { x => x.Themen, _themen }
+            { x => x.Themen, _themen },
+            { x => x.Gastdozenten, _gastdozenten }
         };
         var dialog = await DialogService.ShowAsync<SessionDialog>("Neue Session", parameter);
         var result = await dialog.Result;
@@ -200,7 +204,8 @@ else
         {
             { x => x.Session, session },
             { x => x.SemesterId, SemesterId },
-            { x => x.Themen, _themen }
+            { x => x.Themen, _themen },
+            { x => x.Gastdozenten, _gastdozenten }
         };
         var dialog = await DialogService.ShowAsync<SessionDialog>("Session bearbeiten", parameter);
         var result = await dialog.Result;

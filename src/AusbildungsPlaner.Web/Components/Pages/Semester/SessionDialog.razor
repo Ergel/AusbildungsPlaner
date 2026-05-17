@@ -32,6 +32,14 @@
                 }
             </MudSelect>
 
+            <MudSelect @bind-Value="Session.GastdozentId" Label="Gastdozent (optional)"
+                       Clearable="true" Class="mb-3">
+                @foreach (var g in Gastdozenten)
+                {
+                    <MudSelectItem Value="@g.Id">@g.VollerName</MudSelectItem>
+                }
+            </MudSelect>
+
             <MudTextField @bind-Value="Session.Notizen" Label="Notizen"
                           Lines="2" Class="mb-3" />
         </MudForm>
@@ -48,6 +56,7 @@
     [Parameter] public Session Session { get; set; } = new();
     [Parameter] public int SemesterId { get; set; }
     [Parameter] public List<Thema> Themen { get; set; } = [];
+    [Parameter] public List<AppUser> Gastdozenten { get; set; } = [];
 
     private MudForm _form = null!;
     private bool _valid;
@@ -67,6 +76,7 @@
             Raum = Session.Raum,
             ZoomLink = Session.ZoomLink,
             ThemaId = Session.ThemaId,
+            GastdozentId = Session.GastdozentId,
             Notizen = Session.Notizen
         };
         _datum = Session.Datum == default ? null : Session.Datum.ToDateTime(TimeOnly.MinValue);
