@@ -7,7 +7,11 @@
 
 <MudText Typo="Typo.h4" Class="mb-4">Meine Sessions</MudText>
 
-@if (_sessions.Count == 0)
+@if (_isLoading)
+{
+    <MudProgressCircular Indeterminate="true" Class="my-4" />
+}
+else if (_sessions.Count == 0)
 {
     <MudAlert Severity="Severity.Info">
         Dir sind noch keine Sessions zugewiesen.
@@ -86,6 +90,7 @@ else
 
 @code {
     private List<Session> _sessions = [];
+    private bool _isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -95,5 +100,7 @@ else
 
         if (userId is not null)
             _sessions = await GastdozentService.GetMeineSessionsAsync(userId);
+
+        _isLoading = false;
     }
 }

@@ -41,7 +41,7 @@
 
     private async Task Speichern()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
         if (_valid && _startDate.HasValue && _endDate.HasValue)
         {
             Semester.StartDatum = DateOnly.FromDateTime(_startDate.Value);

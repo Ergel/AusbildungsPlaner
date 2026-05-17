@@ -43,7 +43,7 @@
 
     private async Task Speichern()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
         if (_valid)
             MudDialog.Close(DialogResult.Ok(Thema));
     }

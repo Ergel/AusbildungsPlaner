@@ -87,7 +87,7 @@
 
     private async Task Speichern()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
         if (_valid && _datum.HasValue && _uhrzeit.HasValue)
         {
             Session.Datum = DateOnly.FromDateTime(_datum.Value);

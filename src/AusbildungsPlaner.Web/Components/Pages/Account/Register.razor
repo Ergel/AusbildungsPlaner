@@ -71,7 +71,11 @@
         }
         else
         {
-            errors = result.Errors.Select(e => e.Description).ToList();
+            var hasPasswordError = result.Errors.Any(e =>
+                e.Code.StartsWith("Password", StringComparison.OrdinalIgnoreCase));
+            errors = hasPasswordError
+                ? ["Das Passwort erfüllt nicht die Anforderungen (mind. 8 Zeichen, mind. eine Ziffer)."]
+                : ["Registrierung fehlgeschlagen. Bitte überprüfe deine Eingaben."];
         }
     }
 

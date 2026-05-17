@@ -46,11 +46,16 @@
 
     private async Task LoginAsync()
     {
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, false, false);
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, false, lockoutOnFailure: true);
         if (result.Succeeded)
         {
             Logger.LogInformation("Benutzer angemeldet.");
-            Navigation.NavigateTo(ReturnUrl ?? "/");
+            var ziel = !string.IsNullOrEmpty(ReturnUrl) && ReturnUrl.StartsWith("/") ? ReturnUrl : "/";
+            Navigation.NavigateTo(ziel);
+        }
+        else if (result.IsLockedOut)
+        {
+            errorMessage = "Konto gesperrt. Bitte versuche es später erneut.";
         }
         else
         {
