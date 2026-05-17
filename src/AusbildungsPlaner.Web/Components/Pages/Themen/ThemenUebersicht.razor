@@ -1,0 +1,106 @@
+@page "/themen"
+@attribute [Authorize]
+@inject ThemaService ThemaService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Themen</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Themen</MudText>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="ThemaErstellen" Class="mb-4">
+            Neues Thema
+        </MudButton>
+    </Authorized>
+</AuthorizeView>
+
+<MudDataGrid T="Thema" Items="_themen" Filterable="true" QuickFilter="_quickFilter"
+             SortMode="SortMode.Multiple" Hover="true" Striped="true">
+    <ToolBarContent>
+        <MudSpacer />
+        <MudTextField @bind-Value="_suchtext" Placeholder="Suchen..." Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"
+                      Immediate="true" Class="mt-0" />
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="t => t.Titel" Title="Titel" />
+        <PropertyColumn Property="t => t.Kategorie" Title="Kategorie" />
+        <PropertyColumn Property="t => t.Beschreibung" Title="Beschreibung" />
+        <TemplateColumn Title="Aktionen" Filterable="false" Sortable="false">
+            <CellTemplate>
+                <AuthorizeView Roles="Admin" Context="authCtx">
+                    <Authorized>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
+                                       Color="Color.Primary"
+                                       OnClick="@(() => ThemaBearbeiten(context.Item))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small"
+                                       Color="Color.Error"
+                                       OnClick="@(() => ThemaLoeschen(context.Item))" />
+                    </Authorized>
+                </AuthorizeView>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <NoRecordsContent>
+        <MudText>Keine Themen gefunden.</MudText>
+    </NoRecordsContent>
+</MudDataGrid>
+
+@code {
+    private List<Thema> _themen = [];
+    private string _suchtext = string.Empty;
+
+    private Func<Thema, bool> _quickFilter => t =>
+        string.IsNullOrWhiteSpace(_suchtext) ||
+        t.Titel.Contains(_suchtext, StringComparison.OrdinalIgnoreCase) ||
+        t.Kategorie.Contains(_suchtext, StringComparison.OrdinalIgnoreCase) ||
+        t.Beschreibung.Contains(_suchtext, StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync() => await LadeThemen();
+
+    private async Task LadeThemen() => _themen = await ThemaService.GetAlleThemenAsync();
+
+    private async Task ThemaErstellen()
+    {
+        var dialog = await DialogService.ShowAsync<ThemaDialog>("Neues Thema");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: Thema neuesThema })
+        {
+            await ThemaService.ErstellenAsync(neuesThema);
+            await LadeThemen();
+            Snackbar.Add("Thema erstellt.", Severity.Success);
+        }
+    }
+
+    private async Task ThemaBearbeiten(Thema thema)
+    {
+        var parameter = new DialogParameters<ThemaDialog> { { x => x.Thema, thema } };
+        var dialog = await DialogService.ShowAsync<ThemaDialog>("Thema bearbeiten", parameter);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: Thema aktualisiert })
+        {
+            await ThemaService.AktualisierenAsync(aktualisiert);
+            await LadeThemen();
+            Snackbar.Add("Thema gespeichert.", Severity.Success);
+        }
+    }
+
+    private async Task ThemaLoeschen(Thema thema)
+    {
+        var confirm = await DialogService.ShowMessageBoxAsync(
+            "Thema löschen",
+            $"'{thema.Titel}' wirklich löschen?",
+            yesText: "Löschen", cancelText: "Abbrechen");
+
+        if (confirm == true)
+        {
+            await ThemaService.LoeschenAsync(thema.Id);
+            await LadeThemen();
+            Snackbar.Add("Thema gelöscht.", Severity.Info);
+        }
+    }
+}

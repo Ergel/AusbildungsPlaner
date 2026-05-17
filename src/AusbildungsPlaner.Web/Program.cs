@@ -2,6 +2,7 @@ using AusbildungsPlaner.Web.Components;
 using AusbildungsPlaner.Web.Data;
 using AusbildungsPlaner.Web.Data.Models;
 using AusbildungsPlaner.Web.Data.Seed;
+using AusbildungsPlaner.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
@@ -12,8 +13,12 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddMudServices();
 
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<ThemaService>();
 
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
     {
