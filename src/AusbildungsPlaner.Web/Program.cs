@@ -19,6 +19,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ThemaService>();
 builder.Services.AddScoped<SemesterService>();
 builder.Services.AddScoped<SessionService>();
+builder.Services.AddScoped<GastdozentService>();
 
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
     {
