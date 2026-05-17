@@ -16,6 +16,9 @@ packages/
 x64/
 x86/
 
+## Rider / JetBrains
+.idea/
+
 ## Datenbank
 *.db
 *.db-shm
