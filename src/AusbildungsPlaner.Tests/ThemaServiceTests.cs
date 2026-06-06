@@ -6,7 +6,7 @@ namespace AusbildungsPlaner.Tests;
 public class ThemaServiceTests
 {
     [Fact]
-    public async Task GetThemenNachKategorieAsync_MitPassenderKategorie_GibtNurPassendeThemenZurueck()
+    public async Task Gegeben_ThemenMitVerschiedenenKategorien_Wenn_NachOOPGefiltert_Dann_NurOOPThemenZurueck()
     {
         // Arrange
         using var db = TestHelper.CreateTestDb();
@@ -28,7 +28,7 @@ public class ThemaServiceTests
     }
 
     [Fact]
-    public async Task GetThemenNachKategorieAsync_UnbekannteKategorie_GibtLeereListeZurueck()
+    public async Task Gegeben_ThemenVorhanden_Wenn_NachNichtExistenterKategorieGefiltert_Dann_LeereListeZurueck()
     {
         // Arrange
         using var db = TestHelper.CreateTestDb();
@@ -45,7 +45,7 @@ public class ThemaServiceTests
     }
 
     [Fact]
-    public async Task GetThemenNachKategorieAsync_ErgebnisSortiert_NachTitel()
+    public async Task Gegeben_MehreOOPThemen_Wenn_NachOOPGefiltert_Dann_ErgebnisAlphabetischNachTitelSortiert()
     {
         // Arrange
         using var db = TestHelper.CreateTestDb();

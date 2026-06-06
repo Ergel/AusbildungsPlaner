@@ -43,8 +43,8 @@ public static AppDbContext CreateTestDb()
 
 ## Schritt 2: Test schreiben (RED)
 
-Schreibe den Test **bevor** die Implementierung existiert. Benenne Tests nach dem Schema:
-`MethodenName_Szenario_ErwartetesErgebnis`
+Schreibe den Test **bevor** die Implementierung existiert. Benenne Tests im BDD-Stil auf Deutsch:
+`Gegeben_[Ausgangszustand]_Wenn_[Aktion]_Dann_[ErwartetesErgebnis]`
 
 Beispiel für einen Service-Test:
 
@@ -52,7 +52,7 @@ Beispiel für einen Service-Test:
 public class ThemaServiceTests
 {
     [Fact]
-    public async Task ErstellenAsync_NeuesThema_WirdInDatenbankGespeichert()
+    public async Task Gegeben_NeuesThema_Wenn_ErstellenAufgerufen_Dann_WirdInDatenbankGespeichert()
     {
         // Arrange
         using var db = TestHelper.CreateTestDb();
