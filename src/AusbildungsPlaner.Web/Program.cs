@@ -60,3 +60,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+// Macht Program für WebApplicationFactory in UI-Tests zugänglich
+public partial class Program { }

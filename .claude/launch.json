@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "AusbildungsPlaner.Web (HTTP)",
+      "runtimeExecutable": "C:\\Program Files\\dotnet\\dotnet.exe",
+      "runtimeArgs": ["run", "--project", "src/AusbildungsPlaner.Web", "--launch-profile", "http"],
+      "port": 5272
+    },
+    {
+      "name": "AusbildungsPlaner.Web (HTTPS)",
+      "runtimeExecutable": "C:\\Program Files\\dotnet\\dotnet.exe",
+      "runtimeArgs": ["run", "--project", "src/AusbildungsPlaner.Web", "--launch-profile", "https"],
+      "port": 7282
+    }
+  ]
+}
